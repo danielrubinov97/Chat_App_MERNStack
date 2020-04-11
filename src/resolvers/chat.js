@@ -1,6 +1,6 @@
 import { startChat } from '../schemas'
 import Joi from 'joi'
-import { User, Chat } from '../models'
+import { User, Chat, Message } from '../models'
 import { UserInputError } from 'apollo-server-express'
 
 export default {
@@ -26,6 +26,18 @@ export default {
       })
 
       return chat
+    }
+  },
+  Chat: {
+    messages: (chat, args, context, info) => {
+      // TODO: pagination, projection
+      Message.find({ chat: chat.id })
+    },
+    users: async (chat, args, context, info) => {
+      return (await chat.populate('users').execPopulate()).users
+    },
+    lastMessage: async (chat, args, context, info) => {
+      return (await chat.populate('lastMessage').execPopulate()).lastMessage
     }
   }
 }

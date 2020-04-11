@@ -1,8 +1,6 @@
 import { User } from '../models'
-import mongoose from 'mongoose'
-import { UserInputError } from 'apollo-server-express'
 import Joi from 'joi'
-import { signUp, signIn } from '../schemas'
+import { signUp, signIn, objectId } from '../schemas'
 import { attemptSignIn, signOut } from '../auth'
 
 export default {
@@ -17,13 +15,11 @@ export default {
 
       return User.find({})
     },
-    user: (root, { id }, { req }, info) => {
+    user: async (root, args, { req }, info) => {
       // TODO: projection
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new UserInputError('User ID is not a valid Object ID.')
-      }
+      await Joi.validate(args, objectId)
 
-      return User.findById(id)
+      return User.findById(args.id)
     }
   },
   Mutation: {
@@ -49,6 +45,11 @@ export default {
     },
     signOut: (root, args, { req, res }, info) => {
       return signOut(req, res)
+    }
+  },
+  User: {
+    chats: async (user, args, context, info) => {
+      return (await user.populate('chats').execPopulate()).chats
     }
   }
 }
